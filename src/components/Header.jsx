@@ -1,10 +1,19 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { NavDropdown, Badge } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { useLogoutMutation } from "../slices/usersApiSlice";
+import { logout } from "../slices/authSlice";
 
 function Header() {
   const [burger, setBurger] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isSignup, setIsSignup] = useState(false);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { userInfo } = useSelector((state) => state.auth);
 
   const handleBurgerClick = (e) => {
     e.preventDefault();
@@ -18,6 +27,18 @@ function Header() {
   const handleSignup = () => {
     setIsOpen(true);
     setIsSignup(true);
+  };
+
+  const [logoutApiCall] = useLogoutMutation();
+
+  const logoutHandler = async () => {
+    try {
+      await logoutApiCall().unwrap();
+      dispatch(logout());
+      navigate("/");
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -50,23 +71,41 @@ function Header() {
         </Link>
       </div>
       <div className="sm:flex space-x-8 max-sm:hidden ">
-        <Link to={"/login"}>
-          <button
-            className="w-36 h-14 border border-black rounded-full font-semibold  max-sm:w-28"
-            onClick={handleLogin}
-          >
-            Login
-          </button>
-        </Link>
-        <Link to={"/register"}>
-          <button
-            href="/register"
-            className=" bg-black text-white font-semibold w-36 h-14 rounded-full max-sm:w-28  "
-            onClick={handleSignup}
-          >
-            Signup
-          </button>
-        </Link>
+        {userInfo ? (
+          <>
+            <NavDropdown title={userInfo.name} id="username">
+              <NavDropdown.Item>
+                <Link to="/profile">Profile</Link>
+              </NavDropdown.Item>
+
+              <Link>
+                <NavDropdown.Item onClick={logoutHandler}>
+                  Logout
+                </NavDropdown.Item>
+              </Link>
+            </NavDropdown>
+          </>
+        ) : (
+          <>
+            <Link to={"/login"}>
+              <button
+                className="w-36 h-14 border border-black rounded-full font-semibold  max-sm:w-28"
+                onClick={handleLogin}
+              >
+                Login
+              </button>
+            </Link>
+            <Link to={"/register"}>
+              <button
+                href="/register"
+                className=" bg-black text-white font-semibold w-36 h-14 rounded-full max-sm:w-28  "
+                onClick={handleSignup}
+              >
+                Signup
+              </button>
+            </Link>
+          </>
+        )}
       </div>
 
       {/* Burger Nav */}

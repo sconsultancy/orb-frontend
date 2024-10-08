@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useLoginMutation } from "../slices/usersApiSlice";
 import { setCredentials } from "../slices/authSlice";
 import { toast } from "sonner";
+import Loader from "../components/Loader";
 
 function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -123,6 +124,8 @@ function LoginScreen() {
             Password
           </label>
         </div>
+
+        {isLoading && <Loader></Loader>}
 
         <button
           type="submit"

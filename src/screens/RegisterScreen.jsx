@@ -1,10 +1,30 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useRegisterMutation } from "../slices/usersApiSlice";
+import { Link, useNavigate } from "react-router-dom";
+
+import { setCredentials } from "../slices/authSlice";
+import { toast } from "sonner";
+import Loader from "../components/Loader";
 
 function RegisterScreen() {
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const [register, { isLoading }] = useRegisterMutation();
+
+  const { userInfo } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (userInfo) {
+      navigate("/");
+    }
+  }, [userInfo, navigate]);
 
   const handleFocusInput = (e) => {
     const labels = document.getElementsByTagName("label");
@@ -31,11 +51,16 @@ function RegisterScreen() {
     }
   };
 
-  const handleSignupSubmit = (e) => {
+  const handleSignupSubmit = async (e) => {
     e.preventDefault();
 
-    console.log(name, number, email, password);
-    // clearForm();
+    try {
+      const res = await register({ name, number, email, password }).unwrap();
+      dispatch(setCredentials({ ...res }));
+      navigate("/");
+    } catch (err) {
+      toast.error(err?.data?.message || err.message);
+    }
   };
 
   const handleGoogleSignUp = async () => {
@@ -129,6 +154,8 @@ function RegisterScreen() {
         </div>
 
         {/* <Hero_Dropdown></Hero_Dropdown> */}
+
+        {isLoading && <Loader></Loader>}
 
         <button
           type="submit"
