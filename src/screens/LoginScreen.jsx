@@ -1,8 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { useLoginMutation } from "../slices/usersApiSlice";
+import { setCredentials } from "../slices/authSlice";
+import { toast } from "sonner";
 
 function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const [login, { isLoading }] = useLoginMutation();
+
+  const { userInfo } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (userInfo) {
+      navigate("/");
+    }
+  }, [userInfo, navigate]);
 
   const handleFocusInput = (e) => {
     const labels = document.getElementsByTagName("label");
@@ -47,8 +65,16 @@ function LoginScreen() {
 
   const handleSubmitClick = async (e) => {
     e.preventDefault();
-    console.log(email, password);
+
+    try {
+      const res = await login({ email, password }).unwrap();
+      dispatch(setCredentials({ ...res }));
+      navigate("/");
+    } catch (err) {
+      toast.error(err?.data?.message || err.message);
+    }
   };
+
   const handleGoogleSignIn = async (e) => {
     e.preventDefault();
 
